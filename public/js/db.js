@@ -36,11 +36,47 @@ function saveRecord(record) {
                     console.log('responding with cache : ' + e.request.url);
                     return request
                 } else {
-                    console.log('file is not cached, fetching : ' + e.request.url);
+                    console.log('file has not been cached, fetching : ' + e.request.url);
                     return fetch(e.request)
                 }
     
             })
         )
     });
+};
+
+function uploadTransaction() {
+    const transaction = db.transaction(['new_transaction'], 'readwrite');
+    const budgetObjectStore = transaction.objectStore('new_transaction');
+    const getAll = budgetObjectStore.getAll();
+
+    getAll.onsuccess = function() {
+        if (getAll.result.length > 0) {
+            fetch('/api/transaction', {
+                method: 'POST',
+                body: JSON.stringify(getAll.result),
+                headers: {
+                    Accept: 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(serverResponse => {
+                    if (serverResponse.message) {
+                        throw new Error(serverResponse);
+                    }
+                    // open one more transaction
+                    const transaction = db.transaction(['new_transaction'], 'readwrite')
+                    // accesses the new transaction object
+                    const budgetObjectStore = transaction.objectStore('new_transaction');
+                    // clears all items in store
+                    budgetObjectStore.clear();
+
+                    alert('All saved transactions have been submitted!');
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+    }
 }
