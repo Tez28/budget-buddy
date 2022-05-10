@@ -79,4 +79,6 @@ function uploadTransaction() {
                 });
         }
     }
-}
+};
+
+window.addEventListener('onlie', uploadTransaction);
